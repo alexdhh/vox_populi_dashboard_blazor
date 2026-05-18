@@ -1,0 +1,149 @@
+﻿@page "/login"
+@using vox_populi_dashboard.Services
+@inject AuthService AuthService
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+@layout vox_populi_dashboard.Components.Layout.MainLayout
+
+<style>
+    /* L'astuce pour couvrir tout l'écran et cacher la Top Bar du MainLayout */
+    .login-fullscreen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Le design de la carte de connexion type "SaaS" */
+    .login-card {
+        width: 100%;
+        max-width: 420px;
+        background: white;
+        border-radius: 24px;
+        padding: 48px 40px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+        border: 1px solid #ffffff;
+        text-align: center;
+    }
+
+/* Le conteneur du logo avec un fond violet intense pour faire ressortir le blanc */
+    .login-logo {
+        width: 88px;
+        height: 88px;
+        margin: 0 auto 24px auto;
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); /* Le changement est ici ! */
+        border-radius: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.4);
+    }
+
+    /* Le bouton avec un dégradé et un effet de survol */
+    .login-btn {
+        background: linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%) !important;
+        color: white !important;
+        border-radius: 12px !important;
+        height: 52px;
+        font-size: 1.05rem !important;
+        font-weight: 600 !important;
+        text-transform: none !important;
+        box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4) !important;
+        transition: transform 0.2s, box-shadow 0.2s !important;
+    }
+    .login-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(139, 92, 246, 0.6) !important;
+    }
+
+    /* On arrondit un peu plus les champs de texte de MudBlazor */
+    .mud-input-outlined-border {
+        border-radius: 12px !important;
+    }
+</style>
+
+<div class="login-fullscreen">
+    <div class="login-card">
+        
+        <div class="login-logo">
+            <MudImage Src="/brain_icon.png" Alt="Logo Vox Populi" Style="width: 54px; height: 54px; object-fit: contain;" />
+        </div>
+        
+        <MudText Typo="Typo.h4" Style="font-weight: 800; color: #0f172a; letter-spacing: -0.5px;" Class="mb-2">Bienvenue</MudText>
+        <MudText Typo="Typo.body1" Style="color: #64748b;" Class="mb-8">Connectez-vous à Vox Populi</MudText>
+
+        <MudTextField @bind-Value="Username" 
+                      Label="Nom d'utilisateur" 
+                      Variant="Variant.Outlined" 
+                      Adornment="Adornment.Start" 
+                      AdornmentIcon="@Icons.Material.Outlined.Person" 
+                      AdornmentColor="Color.Primary"
+                      Class="mb-5 text-left" />
+
+        <MudTextField @bind-Value="Password" 
+                      Label="Mot de passe" 
+                      Variant="Variant.Outlined" 
+                      InputType="InputType.Password" 
+                      Adornment="Adornment.Start" 
+                      AdornmentIcon="@Icons.Material.Outlined.Lock" 
+                      AdornmentColor="Color.Primary"
+                      Class="mb-8 text-left" />
+
+        <MudButton OnClick="SeConnecter" Class="login-btn" FullWidth="true" Disabled="@IsLoading">
+            @if (IsLoading)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" Color="Color.Inherit" />
+            }
+            else
+            {
+                <span>Se connecter</span>
+            }
+        </MudButton>
+
+    </div>
+</div>
+
+@code {
+    private string Username { get; set; } = "";
+    private string Password { get; set; } = "";
+    private bool IsLoading { get; set; } = false;
+
+    private async Task SeConnecter()
+    {
+        if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Password))
+        {
+            Snackbar.Add("Veuillez remplir tous les champs.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            IsLoading = true;
+            StateHasChanged(); // Force l'UI à afficher la roue qui tourne
+
+            // Appel à notre API
+            bool success = await AuthService.LoginAsync(Username, Password);
+            
+            if (success)
+            {
+                Snackbar.Add("Connexion réussie !", Severity.Success);
+                Nav.NavigateTo("/");
+            }
+            else
+            {
+                Snackbar.Add("Identifiants incorrects ou API injoignable.", Severity.Error);
+            }
+        }
+        finally
+        {
+            IsLoading = false;
+            StateHasChanged(); // Force l'UI à enlever la roue qui tourne
+        }
+    }
+}

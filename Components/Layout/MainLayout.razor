@@ -1,0 +1,118 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager Nav
+
+<MudThemeProvider Theme="@_voxTheme" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudPopoverProvider />
+
+<style>
+    /* Le fond gris clair pour toute l'application */
+    body {
+        background-color: #f8fafc;
+    }
+
+    /* Le conteneur principal du Dashboard */
+    .vox-main-container {
+        background-color: #f8fafc !important;
+    }
+
+    /* --- NOUVEAU : Le mini-logo avec le même style que la page de login --- */
+    .topbar-logo {
+        width: 42px;
+        height: 42px;
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        transition: transform 0.2s;
+    }
+    .topbar-logo:hover {
+        transform: scale(1.05);
+    }
+
+    /* --- NOUVEAU : Le bouton Dashboard Premium --- */
+    .dashboard-btn {
+        background: linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%) !important;
+        color: white !important;
+        font-weight: 600 !important;
+        text-transform: none !important;
+        border-radius: 10px !important;
+        padding: 6px 20px !important;
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3) !important;
+        transition: all 0.2s ease-in-out !important;
+    }
+    .dashboard-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4) !important;
+    }
+    /* S'assurer que l'icône dans le bouton est bien blanche */
+    .dashboard-btn .mud-icon-root {
+        color: white !important;
+    }
+</style>
+
+<MudLayout>
+    <MudAppBar Elevation="0" Fixed="true" Style="background-color: white; border-bottom: 1px solid #e2e8f0; height: 72px;">
+        
+        <div class="d-flex align-center cursor-pointer" @onclick="GoToDashboard">
+            <div class="topbar-logo mr-3">
+                <MudImage Src="/brain_icon.png" Alt="Logo Vox Populi" Style="width: 24px; height: 24px; object-fit: contain;" />
+            </div>
+            <div>
+                <MudText Typo="Typo.h6" Style="font-weight: 800; color: #1e293b; line-height: 1.1;">Vox Populi</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary" Style="letter-spacing: 0.5px;">Simulation Results Manager</MudText>
+            </div>
+        </div>
+
+        <MudSpacer />
+
+        <div class="d-flex align-center">
+            
+            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.SpaceDashboard" Class="dashboard-btn mr-3">
+                Dashboard
+            </MudButton>
+
+            <MudDivider Vertical="true" FlexItem="true" Class="mx-2 my-4" />
+
+            <MudTooltip Text="Se déconnecter">
+                <MudIconButton Icon="@Icons.Material.Outlined.Logout" Style="color: #64748b;" OnClick="GoToLogin" />
+            </MudTooltip>
+        </div>
+
+    </MudAppBar>
+
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8 pb-12 px-6 vox-main-container">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+
+</MudLayout>
+
+@code {
+    private MudTheme _voxTheme = new MudTheme()
+    {
+        PaletteLight = new PaletteLight()
+        {
+            Primary = "#8b5cf6",
+            Background = "#f8fafc",
+            AppbarBackground = "#ffffff",
+            TextPrimary = "#1e293b",
+            TextSecondary = "#64748b",
+        },
+        LayoutProperties = new LayoutProperties() { DefaultBorderRadius = "16px" }
+    };
+
+    private void GoToDashboard()
+    {
+        Nav.NavigateTo("/");
+    }
+
+    private void GoToLogin()
+    {
+        Nav.NavigateTo("/login");
+    }
+}

@@ -1,0 +1,491 @@
+﻿@page "/"
+@using MudBlazor
+@using vox_populi_dashboard.Models
+@inject vox_populi_dashboard.Services.AuthService AuthService
+@inject vox_populi_dashboard.Services.SimulationService SimulationService
+@inject NavigationManager Nav
+
+<style>
+    /* Design System - Premium SaaS Look */
+    .vox-card {
+        border: 1px solid #f1f5f9;
+        border-radius: 16px !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -2px rgba(0, 0, 0, 0.03) !important;
+        background-color: white;
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .vox-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04) !important;
+    }
+    .vox-header-card {
+        background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+    }
+    .vox-icon-container {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .mud-chart-pie {
+        min-height: 250px;
+    }
+</style>
+
+<div class="d-flex flex-column flex-md-row justify-space-between align-start align-md-center mb-8" style="gap: 16px;">
+    <div>
+        <MudText Typo="Typo.h4" Style="font-weight: 800; color: #0f172a; letter-spacing: -0.5px;">@TitrePage</MudText>
+        <MudText Typo="Typo.body1" Style="color: #64748b;">@SousTitrePage</MudText>
+    </div>
+    
+    <div style="width: 100%; max-width: 350px;">
+        <MudSelect T="string" Placeholder="-- Choisissez une simulation --"
+                   Value="@SimulationSelectionnee" ValueChanged="OnSimulationChanged" Clearable="true"
+                   Variant="Variant.Outlined" Margin="Margin.Dense"
+                   Style="background-color: white; border-radius: 8px;">
+            @foreach (var sim in SimulationsDisponibles)
+            {
+                <MudSelectItem Value="@sim.SimulationId.ToString()">@sim.Titre</MudSelectItem>
+            }
+        </MudSelect>
+    </div>
+</div>
+
+@if (SimulationActuelle != null)
+{
+    <MudPaper Elevation="0" Class="pa-6 mb-8 vox-card vox-header-card">
+        <div class="d-flex align-center mb-6">
+            <MudChip T="string" Variant="Variant.Filled" Size="Size.Small" Class="mr-4 rounded-pill px-3 py-1" Style="background-color: #8b5cf6; color: white; font-weight: 600; font-size: 0.75rem;">
+                ID: @SimulationSelectionnee
+            </MudChip>
+            <div>
+                <MudText Typo="Typo.h6" Style="font-weight: 700; color: #1e293b; line-height: 1.2;">Informations du Discours</MudText>
+                <MudText Typo="Typo.caption" Style="color: #64748b;">Aperçu des métadonnées de la simulation</MudText>
+            </div>
+        </div>
+
+        <MudGrid Spacing="4">
+            <MudItem xs="12" md="4" Class="d-flex align-center">
+                <div class="vox-icon-container mr-4" Style="background-color: #f3e8ff;">
+                    <MudIcon Icon="@Icons.Material.Outlined.Person" Style="color: #8b5cf6;" Size="Size.Medium" />
+                </div>
+                <div>
+                    <MudText Typo="Typo.caption" Style="color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Orateur</MudText>
+                    <MudText Typo="Typo.body1" Style="font-weight: 700; color: #0f172a;">@Orateur</MudText>
+                </div>
+            </MudItem>
+
+            <MudItem xs="12" md="4" Class="d-flex align-center">
+                <div class="vox-icon-container mr-4" Style="background-color: #f3e8ff;">
+                    <MudIcon Icon="@Icons.Material.Outlined.CalendarToday" Style="color: #8b5cf6;" Size="Size.Medium" />
+                </div>
+                <div>
+                    <MudText Typo="Typo.caption" Style="color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Date du Discours</MudText>
+                    <MudText Typo="Typo.body1" Style="font-weight: 700; color: #0f172a;">@DateDiscours</MudText>
+                </div>
+            </MudItem>
+
+            <MudItem xs="12" md="4" Class="d-flex align-center">
+                <div class="vox-icon-container mr-4" Style="background-color: #f3e8ff;">
+                    <MudIcon Icon="@Icons.Material.Outlined.Campaign" Style="color: #8b5cf6;" Size="Size.Medium" />
+                </div>
+                <div>
+                    <MudText Typo="Typo.caption" Style="color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Sujet Principal</MudText>
+                    <MudText Typo="Typo.body1" Style="font-weight: 700; color: #0f172a;" Class="text-truncate">@SujetPrincipal</MudText>
+                </div>
+            </MudItem>
+        </MudGrid>
+        
+        <MudExpansionPanels Class="mt-6" Elevation="0" Style="border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
+            <MudExpansionPanel Text="Afficher le texte complet du discours" Icon="@Icons.Material.Outlined.Notes" Style="background-color: #f8fafc; font-weight: 600; color: #475569;">
+                <MudText Typo="Typo.body2" Style="white-space: pre-wrap; color: #334155; line-height: 1.8; padding: 10px;">
+                    @Discours
+                </MudText>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+    </MudPaper>
+
+    <MudText Typo="Typo.h6" Class="mb-4 mt-8" Style="font-weight: 700; color: #0f172a; letter-spacing: -0.5px;">Panel des Agents</MudText>
+
+    <MudGrid Spacing="4" Class="mb-8">
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="0" Class="pa-6 vox-card d-flex align-center justify-space-between h-100">
+                <div>
+                    <MudText Typo="Typo.caption" Style="color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Total des Agents</MudText>
+                    <MudText Typo="Typo.h3" Style="font-weight: 800; color: #0f172a; margin-top: 4px;">@TotalAgents</MudText>
+                </div>
+                <div class="vox-icon-container" Style="background-color: #f8fafc; width: 64px; height: 64px; border-radius: 50%;">
+                    <MudIcon Icon="@Icons.Material.Outlined.Groups" Style="color: #64748b;" Size="Size.Large" />
+                </div>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="0" Class="pa-6 vox-card d-flex align-center justify-space-between h-100">
+                <div>
+                    <MudText Typo="Typo.caption" Style="color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Agents de Droite</MudText>
+                    <div class="d-flex align-baseline mt-1">
+                        <MudText Typo="Typo.h3" Style="font-weight: 800; color: #0f172a; margin-right: 8px;">@AgentsDroite</MudText>
+                        <MudText Typo="Typo.body2" Style="color: #3b82f6; font-weight: 600;">@PourcentageDroite</MudText>
+                    </div>
+                </div>
+                <div class="vox-icon-container" Style="background-color: #eff6ff; width: 64px; height: 64px; border-radius: 50%;">
+                    <MudIcon Icon="@Icons.Material.Outlined.TrendingUp" Style="color: #3b82f6;" Size="Size.Large" />
+                </div>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="0" Class="pa-6 vox-card d-flex align-center justify-space-between h-100">
+                <div>
+                    <MudText Typo="Typo.caption" Style="color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Agents de Gauche</MudText>
+                    <div class="d-flex align-baseline mt-1">
+                        <MudText Typo="Typo.h3" Style="font-weight: 800; color: #0f172a; margin-right: 8px;">@AgentsGauche</MudText>
+                        <MudText Typo="Typo.body2" Style="color: #ef4444; font-weight: 600;">@PourcentageGauche</MudText>
+                    </div>
+                </div>
+                <div class="vox-icon-container" Style="background-color: #fef2f2; width: 64px; height: 64px; border-radius: 50%;">
+                    <MudIcon Icon="@Icons.Material.Outlined.TrendingDown" Style="color: #ef4444;" Size="Size.Large" />
+                </div>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudText Typo="Typo.h6" Class="mb-4 mt-8" Style="font-weight: 700; color: #0f172a; letter-spacing: -0.5px;">Répartition Visuelle</MudText>
+
+<MudText Typo="Typo.h6" Class="mb-4 mt-8" Style="font-weight: 700; color: #0f172a; letter-spacing: -0.5px;">Répartition Visuelle</MudText>
+
+    <MudGrid Spacing="4" Class="mb-8">
+        <MudItem xs="12" md="6">
+            <MudPaper Elevation="0" Class="pa-6 vox-card d-flex flex-column h-100">
+                <MudText Typo="Typo.subtitle1" Class="mb-6" Style="font-weight: 700; color: #1e293b;">Orientation Politique</MudText>
+                <div class="d-flex justify-center flex-grow-1 align-center w-100" style="min-height: 300px;">
+                    <!-- On a remis T="double" ici -->
+                    <MudChart T="double" ChartType="ChartType.Pie" InputData="@DonneesOrientation" InputLabels="@LabelsOrientation" Options="@OptionsOrientation" Width="100%" Height="300px" />
+                </div>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="6">
+            <MudPaper Elevation="0" Class="pa-6 vox-card d-flex flex-column h-100">
+                <MudText Typo="Typo.subtitle1" Class="mb-6" Style="font-weight: 700; color: #1e293b;">État Émotionnel</MudText>
+                <div class="d-flex justify-center flex-grow-1 align-center w-100" style="min-height: 300px;">
+                    <!-- Et on a remis T="double" ici aussi -->
+                    <MudChart T="double" ChartType="ChartType.Pie" InputData="@DonneesEmotion" InputLabels="@LabelsEmotion" Options="@OptionsEmotion" Width="100%" Height="300px" />
+                </div>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudText Typo="Typo.h6" Class="mb-4 mt-8" Style="font-weight: 700; color: #0f172a; letter-spacing: -0.5px;">État Émotionnel Global</MudText>
+
+    <MudGrid Spacing="4" Class="mb-8">
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="0" Class="pa-6 vox-card d-flex flex-column align-center text-center h-100">
+                <div class="vox-icon-container mb-4" Style="background-color: #d1fae5; width: 72px; height: 72px; border-radius: 50%;">
+                    <MudIcon Icon="@Icons.Material.Filled.SentimentSatisfiedAlt" Style="color: #10b981;" Size="Size.Large" />
+                </div>
+                <MudText Typo="Typo.h3" Class="mb-1" Style="font-weight: 800; color: #0f172a;">@DonneesEmotion[0]%</MudText>
+                <MudText Typo="Typo.body2" Style="color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Contents</MudText>
+                <MudProgressLinear Color="Color.Primary" Value="@DonneesEmotion[0]" Class="mt-6 w-100" Height="12px" Style="background-color: #f1f5f9; border-radius: 6px;" />
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="0" Class="pa-6 vox-card d-flex flex-column align-center text-center h-100">
+                <div class="vox-icon-container mb-4" Style="background-color: #f1f5f9; width: 72px; height: 72px; border-radius: 50%;">
+                    <MudIcon Icon="@Icons.Material.Filled.SentimentNeutral" Style="color: #64748b;" Size="Size.Large" />
+                </div>
+                <MudText Typo="Typo.h3" Class="mb-1" Style="font-weight: 800; color: #0f172a;">@DonneesEmotion[1]%</MudText>
+                <MudText Typo="Typo.body2" Style="color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Neutres</MudText>
+                <MudProgressLinear Value="@DonneesEmotion[1]" Class="mt-6 w-100" Height="12px" Style="background-color: #f8fafc; border-radius: 6px; --mud-palette-primary: #64748b;" />
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="0" Class="pa-6 vox-card d-flex flex-column align-center text-center h-100">
+                <div class="vox-icon-container mb-4" Style="background-color: #ffedd5; width: 72px; height: 72px; border-radius: 50%;">
+                    <MudIcon Icon="@Icons.Material.Filled.SentimentDissatisfied" Style="color: #f97316;" Size="Size.Large" />
+                </div>
+                <MudText Typo="Typo.h3" Class="mb-1" Style="font-weight: 800; color: #0f172a;">@DonneesEmotion[2]%</MudText>
+                <MudText Typo="Typo.body2" Style="color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Mécontents</MudText>
+                <MudProgressLinear Value="@DonneesEmotion[2]" Class="mt-6 w-100" Height="12px" Style="background-color: #fff7ed; border-radius: 6px; --mud-palette-primary: #f97316;" />
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudText Typo="Typo.h6" Class="mb-4 mt-8" Style="font-weight: 700; color: #0f172a; letter-spacing: -0.5px;">Comparaison Détaillée</MudText>
+
+    <MudPaper Elevation="0" Class="pa-6 mb-8 vox-card">
+        <MudChart T="double" ChartType="ChartType.Bar" ChartSeries="@SeriesBar" XAxisLabels="@XAxisLabelsBar" Options="@OptionsBar" Width="100%" Height="350px" />
+    </MudPaper>
+
+    <MudGrid Spacing="4" Class="mb-8">
+        <!-- COLONNE DE DROITE -->
+        <MudItem xs="12" md="6">
+            <MudText Typo="Typo.subtitle1" Class="mb-4 ml-2" Style="font-weight: 700; color: #1e293b;">Détail : Droite</MudText>
+            
+            <MudPaper Elevation="0" Class="pa-5 mb-4 vox-card d-flex align-center justify-space-between">
+                <div class="d-flex align-center">
+                    <div class="vox-icon-container mr-4" Style="background-color: #d1fae5;">
+                        <MudIcon Icon="@Icons.Material.Outlined.SentimentSatisfiedAlt" Style="color: #10b981;" Size="Size.Small" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.h5" Style="font-weight: 800; color: #0f172a;">@AgentsDroiteContents</MudText>
+                        <MudText Typo="Typo.body2" Style="color: #64748b; font-weight: 500;">Contents</MudText>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <MudText Typo="Typo.h6" Style="color: #10b981; font-weight: 700;">@PourcentageDroiteContents.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)%</MudText>
+                </div>
+            </MudPaper>
+
+            <MudPaper Elevation="0" Class="pa-5 mb-4 vox-card d-flex align-center justify-space-between">
+                <div class="d-flex align-center">
+                    <div class="vox-icon-container mr-4" Style="background-color: #f1f5f9;">
+                        <MudIcon Icon="@Icons.Material.Outlined.SentimentNeutral" Style="color: #64748b;" Size="Size.Small" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.h5" Style="font-weight: 800; color: #0f172a;">@AgentsDroiteNeutres</MudText>
+                        <MudText Typo="Typo.body2" Style="color: #64748b; font-weight: 500;">Neutres</MudText>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <MudText Typo="Typo.h6" Style="color: #64748b; font-weight: 700;">@PourcentageDroiteNeutres.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)%</MudText>
+                </div>
+            </MudPaper>
+
+            <MudPaper Elevation="0" Class="pa-5 vox-card d-flex align-center justify-space-between">
+                <div class="d-flex align-center">
+                    <div class="vox-icon-container mr-4" Style="background-color: #ffedd5;">
+                        <MudIcon Icon="@Icons.Material.Outlined.SentimentDissatisfied" Style="color: #f97316;" Size="Size.Small" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.h5" Style="font-weight: 800; color: #0f172a;">@AgentsDroiteMecontents</MudText>
+                        <MudText Typo="Typo.body2" Style="color: #64748b; font-weight: 500;">Mécontents</MudText>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <MudText Typo="Typo.h6" Style="color: #f97316; font-weight: 700;">@PourcentageDroiteMecontents.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)%</MudText>
+                </div>
+            </MudPaper>
+        </MudItem>
+
+        <!-- COLONNE DE GAUCHE -->
+        <MudItem xs="12" md="6">
+            <MudText Typo="Typo.subtitle1" Class="mb-4 ml-2" Style="font-weight: 700; color: #1e293b;">Détail : Gauche</MudText>
+            
+            <MudPaper Elevation="0" Class="pa-5 mb-4 vox-card d-flex align-center justify-space-between">
+                <div class="d-flex align-center">
+                    <div class="vox-icon-container mr-4" Style="background-color: #d1fae5;">
+                        <MudIcon Icon="@Icons.Material.Outlined.SentimentSatisfiedAlt" Style="color: #10b981;" Size="Size.Small" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.h5" Style="font-weight: 800; color: #0f172a;">@AgentsGaucheContents</MudText>
+                        <MudText Typo="Typo.body2" Style="color: #64748b; font-weight: 500;">Contents</MudText>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <MudText Typo="Typo.h6" Style="color: #10b981; font-weight: 700;">@PourcentageGaucheContents.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)%</MudText>
+                </div>
+            </MudPaper>
+
+            <MudPaper Elevation="0" Class="pa-5 mb-4 vox-card d-flex align-center justify-space-between">
+                <div class="d-flex align-center">
+                    <div class="vox-icon-container mr-4" Style="background-color: #f1f5f9;">
+                        <MudIcon Icon="@Icons.Material.Outlined.SentimentNeutral" Style="color: #64748b;" Size="Size.Small" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.h5" Style="font-weight: 800; color: #0f172a;">@AgentsGaucheNeutres</MudText>
+                        <MudText Typo="Typo.body2" Style="color: #64748b; font-weight: 500;">Neutres</MudText>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <MudText Typo="Typo.h6" Style="color: #64748b; font-weight: 700;">@PourcentageGaucheNeutres.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)%</MudText>
+                </div>
+            </MudPaper>
+
+            <MudPaper Elevation="0" Class="pa-5 vox-card d-flex align-center justify-space-between">
+                <div class="d-flex align-center">
+                    <div class="vox-icon-container mr-4" Style="background-color: #ffedd5;">
+                        <MudIcon Icon="@Icons.Material.Outlined.SentimentDissatisfied" Style="color: #f97316;" Size="Size.Small" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.h5" Style="font-weight: 800; color: #0f172a;">@AgentsGaucheMecontents</MudText>
+                        <MudText Typo="Typo.body2" Style="color: #64748b; font-weight: 500;">Mécontents</MudText>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <MudText Typo="Typo.h6" Style="color: #f97316; font-weight: 700;">@PourcentageGaucheMecontents.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)%</MudText>
+                </div>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudPaper Elevation="0" Class="pa-8 mb-12 vox-card" Style="background-color: #f8fafc; border: none;">
+        <MudText Typo="Typo.h6" Class="mb-6" Style="font-weight: 800; color: #0f172a; text-align: center;">Bilan de Satisfaction</MudText>
+
+        <div class="d-flex justify-space-between mb-2">
+            <MudText Typo="Typo.body2" Style="font-weight: 600; color: #475569;">Global</MudText>
+            <MudText Typo="Typo.subtitle2" Style="font-weight: 800; color: #8b5cf6;">@TauxSatisfactionGlobal.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)%</MudText>
+        </div>
+        <MudProgressLinear Value="@TauxSatisfactionGlobal" Color="Color.Success" Class="mb-6 rounded-pill" Height="14px" Style="background-color: #e2e8f0;" />
+
+        <div class="d-flex justify-space-between mb-2">
+            <MudText Typo="Typo.body2" Style="font-weight: 600; color: #475569;">Droite</MudText>
+            <MudText Typo="Typo.subtitle2" Style="font-weight: 800; color: #3b82f6;">@PourcentageDroiteContents.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)%</MudText>
+        </div>
+        <MudProgressLinear Value="@PourcentageDroiteContents" Class="mb-6 rounded-pill" Height="14px" Style="background-color: #eff6ff; --mud-palette-primary: #3b82f6;" />
+
+        <div class="d-flex justify-space-between mb-2">
+            <MudText Typo="Typo.body2" Style="font-weight: 600; color: #475569;">Gauche</MudText>
+            <MudText Typo="Typo.subtitle2" Style="font-weight: 800; color: #ef4444;">@PourcentageGaucheContents.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)%</MudText>
+        </div>
+        <MudProgressLinear Value="@PourcentageGaucheContents" Class="rounded-pill" Height="14px" Style="background-color: #fef2f2; --mud-palette-primary: #ef4444;" />
+    </MudPaper>
+}
+
+@code {
+    private string TitrePage = "Analyse des Réactions";
+    private string SousTitrePage = "Évaluation détaillée des émotions et de l'impact politique";
+
+    private List<Simulation> SimulationsDisponibles = new();
+    private Simulation? SimulationActuelle; 
+    private string SimulationSelectionnee = "";
+
+    private string Orateur = "";
+    private string DateDiscours = "";
+    private string SujetPrincipal = "";
+    private string Discours = "";
+    private int TotalAgents = 0;
+    private int AgentsDroite = 0;
+    private int AgentsGauche = 0;
+    
+    private int AgentsDroiteContents = 0;
+    private int AgentsDroiteNeutres = 0;
+    private int AgentsDroiteMecontents = 0;
+    
+    private int AgentsGaucheContents = 0;
+    private int AgentsGaucheNeutres = 0;
+    private int AgentsGaucheMecontents = 0;
+    
+    private string PourcentageDroite => TotalAgents == 0 ? "0%" : $"{((double)AgentsDroite / TotalAgents) * 100:0.0}%";
+    private string PourcentageGauche => TotalAgents == 0 ? "0%" : $"{((double)AgentsGauche / TotalAgents) * 100:0.0}%";
+
+    private double PourcentageDroiteContents => AgentsDroite == 0 ? 0 : Math.Round(((double)AgentsDroiteContents / AgentsDroite) * 100, 1);
+    private double PourcentageDroiteNeutres => AgentsDroite == 0 ? 0 : Math.Round(((double)AgentsDroiteNeutres / AgentsDroite) * 100, 1);
+    private double PourcentageDroiteMecontents => AgentsDroite == 0 ? 0 : Math.Round(((double)AgentsDroiteMecontents / AgentsDroite) * 100, 1);
+    
+    private double PourcentageGaucheContents => AgentsGauche == 0 ? 0 : Math.Round(((double)AgentsGaucheContents / AgentsGauche) * 100, 1);
+    private double PourcentageGaucheNeutres => AgentsGauche == 0 ? 0 : Math.Round(((double)AgentsGaucheNeutres / AgentsGauche) * 100, 1);
+    private double PourcentageGaucheMecontents => AgentsGauche == 0 ? 0 : Math.Round(((double)AgentsGaucheMecontents / AgentsGauche) * 100, 1);
+    
+    private double TauxSatisfactionGlobal => TotalAgents == 0 ? 0 : Math.Round(((double)(AgentsDroiteContents + AgentsGaucheContents) / TotalAgents) * 100, 1);
+
+    private double[] DonneesOrientation = { 50, 50 };
+    private double[] DonneesEmotion = { 33.3, 33.3, 33.3 };
+    private string[] LabelsOrientation = { "", "" };
+    private string[] LabelsEmotion = { "", "", "" };
+
+    public ChartOptions OptionsOrientation { get; set; } = new ChartOptions() { 
+        ChartPalette = new string[] { "#3b82f6", "#ef4444" }
+    };
+    public ChartOptions OptionsEmotion { get; set; } = new ChartOptions() { 
+        ChartPalette = new string[] { "#10b981", "#94a3b8", "#f97316" } 
+    };
+    public ChartOptions OptionsBar { get; set; } = new ChartOptions() { 
+        ChartPalette = new string[] { "#10b981", "#94a3b8", "#f97316" } 
+    };
+
+    private List<ChartSeries<double>> SeriesBar => new()
+    {
+        new ChartSeries<double>() { Name = "Contents", Data = new double[] { AgentsDroiteContents, AgentsGaucheContents } },
+        new ChartSeries<double>() { Name = "Neutres", Data = new double[] { AgentsDroiteNeutres, AgentsGaucheNeutres } },
+        new ChartSeries<double>() { Name = "Mécontents", Data = new double[] { AgentsDroiteMecontents, AgentsGaucheMecontents } }
+    };
+    public string[] XAxisLabelsBar = { "Droite", "Gauche" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrEmpty(AuthService.Token))
+        {
+            Nav.NavigateTo("/login");
+            return;
+        }
+
+        SimulationsDisponibles = await SimulationService.GetSimulationsAsync();
+    }
+
+    private void OnSimulationChanged(string simulationIdStr)
+    {
+        SimulationSelectionnee = simulationIdStr;
+
+        if (int.TryParse(simulationIdStr, out int id))
+        {
+            SimulationActuelle = SimulationsDisponibles.FirstOrDefault(s => s.SimulationId == id);
+
+            if (SimulationActuelle != null)
+            {
+                Orateur = "Non spécifié par l'API";
+                DateDiscours = SimulationActuelle.DateSimulation.ToString("dd MMMM yyyy");
+                SujetPrincipal = SimulationActuelle.Titre ?? "Sans titre";
+                Discours = SimulationActuelle.Discours ?? "Aucun texte disponible pour cette simulation.";
+                TotalAgents = SimulationActuelle.NbAgent > 0 ? SimulationActuelle.NbAgent : SimulationActuelle.Agents.Count;
+
+                var agentsDroiteList = SimulationActuelle.Agents.Where(a => a.OrientationPolitique == "Droite" || a.OriantationPolitique == "Droite").ToList();
+                var agentsGaucheList = SimulationActuelle.Agents.Where(a => a.OrientationPolitique == "Gauche" || a.OriantationPolitique == "Gauche").ToList();
+
+                AgentsDroite = agentsDroiteList.Count;
+                AgentsGauche = agentsGaucheList.Count;
+
+                AgentsDroiteContents = agentsDroiteList.Count(a => a.NiveauEmotion == 2);
+                AgentsDroiteNeutres = agentsDroiteList.Count(a => a.NiveauEmotion == 1);
+                AgentsDroiteMecontents = agentsDroiteList.Count(a => a.NiveauEmotion == 0);
+
+                AgentsGaucheContents = agentsGaucheList.Count(a => a.NiveauEmotion == 2);
+                AgentsGaucheNeutres = agentsGaucheList.Count(a => a.NiveauEmotion == 1);
+                AgentsGaucheMecontents = agentsGaucheList.Count(a => a.NiveauEmotion == 0);
+
+                // --- 1. CORRECTION ICI : Remplacement du 0.0001 qui fait planter le SVG MudBlazor ---
+                if (AgentsDroite == 0 && AgentsGauche == 0)
+                {
+                    DonneesOrientation = new double[] { 50, 50 }; // Affichera un cercle parfait
+                    LabelsOrientation = new string[] { "Aucun agent", "Aucun agent" };
+                }
+                else
+                {
+                    DonneesOrientation = new double[] { AgentsDroite, AgentsGauche }; // Nombres entiers propres
+                    LabelsOrientation = new string[] { $"Droite ({PourcentageDroite})", $"Gauche ({PourcentageGauche})" };
+                }
+
+                int totalContents = SimulationActuelle.Agents.Count(a => a.NiveauEmotion == 2);
+                int totalNeutres = SimulationActuelle.Agents.Count(a => a.NiveauEmotion == 1);
+                int totalMecontents = SimulationActuelle.Agents.Count(a => a.NiveauEmotion == 0);
+
+                double pctContents = TotalAgents == 0 ? 0 : Math.Round(((double)totalContents / TotalAgents) * 100, 1);
+                double pctNeutres = TotalAgents == 0 ? 0 : Math.Round(((double)totalNeutres / TotalAgents) * 100, 1);
+                double pctMecontents = TotalAgents == 0 ? 0 : Math.Round(((double)totalMecontents / TotalAgents) * 100, 1);
+
+                // --- 2. CORRECTION ICI : Remplacement du 0.0001 qui fait planter le SVG MudBlazor ---
+                if (totalContents == 0 && totalNeutres == 0 && totalMecontents == 0)
+                {
+                    DonneesEmotion = new double[] { 33.3, 33.3, 33.3 }; // Affichera un camembert symétrique
+                    LabelsEmotion = new string[] { "Aucun", "Aucun", "Aucun" };
+                }
+                else 
+                {
+                    DonneesEmotion = new double[] { pctContents, pctNeutres, pctMecontents }; // Pourcentages propres
+                    LabelsEmotion = new string[] { $"Contents ({pctContents}%)", $"Neutres ({pctNeutres}%)", $"Mécontents ({pctMecontents}%)" };
+                }
+                
+                StateHasChanged(); 
+            }
+        }
+        else
+        {
+            SimulationActuelle = null;
+        }
+    }
+}
