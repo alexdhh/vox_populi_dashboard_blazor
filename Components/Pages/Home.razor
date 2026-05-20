@@ -161,7 +161,7 @@
             <MudPaper Elevation="0" Class="pa-6 vox-card d-flex flex-column h-100">
                 <MudText Typo="Typo.subtitle1" Class="mb-6" Style="font-weight: 700; color: #1e293b;">Orientation Politique</MudText>
                 <div class="d-flex justify-center flex-grow-1 align-center w-100" style="min-height: 300px;">
-                    <MudChart T="double" ChartType="ChartType.Pie" InputData="@DonneesOrientation" InputLabels="@LabelsOrientation" Options="@OptionsOrientation" Width="100%" Height="300px" />
+                    <MudChart T="double" ChartType="ChartType.Pie" ChartSeries="@SeriesOrientation" InputLabels="@LabelsOrientation" Options="@OptionsOrientation" Width="100%" Height="300px" />
                 </div>
             </MudPaper>
         </MudItem>
@@ -170,7 +170,7 @@
             <MudPaper Elevation="0" Class="pa-6 vox-card d-flex flex-column h-100">
                 <MudText Typo="Typo.subtitle1" Class="mb-6" Style="font-weight: 700; color: #1e293b;">État Émotionnel</MudText>
                 <div class="d-flex justify-center flex-grow-1 align-center w-100" style="min-height: 300px;">
-                    <MudChart T="double" ChartType="ChartType.Pie" InputData="@DonneesEmotion" InputLabels="@LabelsEmotion" Options="@OptionsEmotion" Width="100%" Height="300px" />
+                    <MudChart T="double" ChartType="ChartType.Pie" ChartSeries="@SeriesEmotion" InputLabels="@LabelsEmotion" Options="@OptionsEmotion" Width="100%" Height="300px" />
                 </div>
             </MudPaper>
         </MudItem>
@@ -365,7 +365,6 @@
                         </MudAvatar>
                         <div>
                             @{
-                                // On vérifie s'il y a un nom, sinon on donne un nom par défaut
                                 string nomComplet = $"{context.PrenomAgent} {context.NomAgent}".Trim();
                                 if (string.IsNullOrWhiteSpace(nomComplet))
                                 {
@@ -425,6 +424,7 @@
 }
 
 @code {
+
     private string TitrePage = "Analyse des Réactions";
     private string SousTitrePage = "Évaluation détaillée des émotions et de l'impact politique";
 
@@ -466,14 +466,18 @@
     private double PctNeutres = 33.3;
     private double PctMecontents = 33.3;
 
-    // --- VARIABLES POUR LES CAMEMBERTS ---
+    // --- VARIABLES FIXES POUR GARDER LES COULEURS INTACTES ---
     private double[] DonneesOrientation = { 50, 50 };
     private double[] DonneesEmotion = { 33.3, 33.3, 33.3 };
-    private string[] LabelsOrientation = { "", "" };
-    private string[] LabelsEmotion = { "", "", "" };
+    private string[] LabelsOrientation = { "Droite", "Gauche" };
+    private string[] LabelsEmotion = { "Content", "Neutre", "Mécontent" };
 
+    private List<ChartSeries<double>> SeriesOrientation => new() { new ChartSeries<double> { Data = DonneesOrientation } };
+    private List<ChartSeries<double>> SeriesEmotion => new() { new ChartSeries<double> { Data = DonneesEmotion } };
+
+    // --- LES PALETTES SONT MAINTENANT VERROUILLÉES ---
     public ChartOptions OptionsOrientation { get; set; } = new ChartOptions() { 
-        ChartPalette = new string[] { "#3b82f6", "#ef4444" }
+        ChartPalette = new string[] { "#000080", "#8B0000" } 
     };
     public ChartOptions OptionsEmotion { get; set; } = new ChartOptions() { 
         ChartPalette = new string[] { "#10b981", "#94a3b8", "#f97316" } 
@@ -513,71 +517,60 @@
 
                 if (SimulationActuelle != null)
                 {
-                    // --- SÉCURITÉ ANTI-CRASH SUR LA LISTE DES AGENTS ---
-                    if (SimulationActuelle.Agents == null)
-                    {
-                        SimulationActuelle.Agents = new List<Agent>();
-                    }
+                    if (SimulationActuelle.Agents == null) SimulationActuelle.Agents = new List<Agent>();
 
-                    Orateur = "Non spécifié par l'API";
-                    DateDiscours = SimulationActuelle.DateSimulation.ToString("dd MMMM yyyy");
-                    SujetPrincipal = SimulationActuelle.Titre ?? "Sans titre";
-                    Discours = SimulationActuelle.Discours ?? "Aucun texte disponible pour cette simulation.";
                     TotalAgents = SimulationActuelle.NbAgent > 0 ? SimulationActuelle.NbAgent : SimulationActuelle.Agents.Count;
-
                     var agentsDroiteList = SimulationActuelle.Agents.Where(a => a.OrientationPolitique == "Droite" || a.OriantationPolitique == "Droite").ToList();
                     var agentsGaucheList = SimulationActuelle.Agents.Where(a => a.OrientationPolitique == "Gauche" || a.OriantationPolitique == "Gauche").ToList();
-
                     AgentsDroite = agentsDroiteList.Count;
                     AgentsGauche = agentsGaucheList.Count;
 
                     AgentsDroiteContents = agentsDroiteList.Count(a => a.NiveauEmotion == 2);
                     AgentsDroiteNeutres = agentsDroiteList.Count(a => a.NiveauEmotion == 1);
                     AgentsDroiteMecontents = agentsDroiteList.Count(a => a.NiveauEmotion == 0);
-
                     AgentsGaucheContents = agentsGaucheList.Count(a => a.NiveauEmotion == 2);
                     AgentsGaucheNeutres = agentsGaucheList.Count(a => a.NiveauEmotion == 1);
                     AgentsGaucheMecontents = agentsGaucheList.Count(a => a.NiveauEmotion == 0);
 
-                    // 1. Graphique d'Orientation
-                    var valOr = new List<double>();
-                    var labOr = new List<string>();
-                    var colOr = new List<string>();
+                    // --- NOUVELLE LOGIQUE POUR LES GRAPHIQUES (L'ASTUCE DU 0.00001) ---
+                    if (TotalAgents == 0)
+                    {
+                        DonneesOrientation = new double[] { 1 };
+                        LabelsOrientation = new string[] { "Aucune donnée" };
+                        OptionsOrientation = new ChartOptions { ChartPalette = new string[] { "#e2e8f0" } };
 
-                    if (AgentsDroite > 0) { valOr.Add(AgentsDroite); labOr.Add($"Droite ({PourcentageDroite})"); colOr.Add("#3b82f6"); }
-                    if (AgentsGauche > 0) { valOr.Add(AgentsGauche); labOr.Add($"Gauche ({PourcentageGauche})"); colOr.Add("#ef4444"); }
+                        DonneesEmotion = new double[] { 1 };
+                        LabelsEmotion = new string[] { "Aucune donnée" };
+                        OptionsEmotion = new ChartOptions { ChartPalette = new string[] { "#e2e8f0" } };
+                    }
+                    else
+                    {
+                        // On force la taille du tableau. Si c'est 0, on met 0.00001 : le SVG ne crashe pas, et la couleur reste alignée.
+                        DonneesOrientation = new double[] { 
+                            AgentsDroite == 0 ? 0.00001 : AgentsDroite, 
+                            AgentsGauche == 0 ? 0.00001 : AgentsGauche 
+                        };
+                        LabelsOrientation = new string[] { "Droite", "Gauche" };
+                        OptionsOrientation = new ChartOptions { ChartPalette = new string[] { "#000080", "#8B0000" } };
 
-                    if (valOr.Count == 0) { valOr.Add(1); labOr.Add("Aucune donnée"); colOr.Add("#e2e8f0"); }
+                        int totalC = AgentsDroiteContents + AgentsGaucheContents;
+                        int totalN = AgentsDroiteNeutres + AgentsGaucheNeutres;
+                        int totalM = AgentsDroiteMecontents + AgentsGaucheMecontents;
 
-                    DonneesOrientation = valOr.ToArray();
-                    LabelsOrientation = labOr.ToArray();
-                    OptionsOrientation = new ChartOptions { ChartPalette = colOr.ToArray() };
+                        DonneesEmotion = new double[] { 
+                            totalC == 0 ? 0.00001 : totalC, 
+                            totalN == 0 ? 0.00001 : totalN, 
+                            totalM == 0 ? 0.00001 : totalM 
+                        };
+                        LabelsEmotion = new string[] { "Content", "Neutre", "Mécontent" };
+                        OptionsEmotion = new ChartOptions { ChartPalette = new string[] { "#10b981", "#94a3b8", "#f97316" } };
 
-                    // 2. Gestion des valeurs statiques (Sécurité)
-                    int totalContents = SimulationActuelle.Agents.Count(a => a.NiveauEmotion == 2);
-                    int totalNeutres = SimulationActuelle.Agents.Count(a => a.NiveauEmotion == 1);
-                    int totalMecontents = SimulationActuelle.Agents.Count(a => a.NiveauEmotion == 0);
+                        PctContents = Math.Round(((double)totalC / TotalAgents) * 100, 1);
+                        PctNeutres = Math.Round(((double)totalN / TotalAgents) * 100, 1);
+                        PctMecontents = Math.Round(((double)totalM / TotalAgents) * 100, 1);
+                    }
 
-                    PctContents = TotalAgents == 0 ? 0 : Math.Round(((double)totalContents / TotalAgents) * 100, 1);
-                    PctNeutres = TotalAgents == 0 ? 0 : Math.Round(((double)totalNeutres / TotalAgents) * 100, 1);
-                    PctMecontents = TotalAgents == 0 ? 0 : Math.Round(((double)totalMecontents / TotalAgents) * 100, 1);
-
-                    // 3. Graphique d'Émotions (Dynamique)
-                    var valEm = new List<double>();
-                    var labEm = new List<string>();
-                    var colEm = new List<string>();
-
-                    if (PctContents > 0) { valEm.Add(PctContents); labEm.Add($"Contents ({PctContents}%)"); colEm.Add("#10b981"); }
-                    if (PctNeutres > 0) { valEm.Add(PctNeutres); labEm.Add($"Neutres ({PctNeutres}%)"); colEm.Add("#94a3b8"); }
-                    if (PctMecontents > 0) { valEm.Add(PctMecontents); labEm.Add($"Mécontents ({PctMecontents}%)"); colEm.Add("#f97316"); }
-
-                    if (valEm.Count == 0) { valEm.Add(1); labEm.Add("Aucune donnée"); colEm.Add("#e2e8f0"); }
-
-                    DonneesEmotion = valEm.ToArray();
-                    LabelsEmotion = labEm.ToArray();
-                    OptionsEmotion = new ChartOptions { ChartPalette = colEm.ToArray() };
-                    
-                    StateHasChanged(); 
+                    StateHasChanged();
                 }
             }
             else
