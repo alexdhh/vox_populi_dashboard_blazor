@@ -4,6 +4,7 @@
 @inject vox_populi_dashboard.Services.AuthService AuthService
 @inject vox_populi_dashboard.Services.SimulationService SimulationService
 @inject NavigationManager Nav
+@inject ISnackbar Snackbar
 
 <style>
     /* Design System - Premium SaaS Look */
@@ -155,14 +156,11 @@
 
     <MudText Typo="Typo.h6" Class="mb-4 mt-8" Style="font-weight: 700; color: #0f172a; letter-spacing: -0.5px;">Répartition Visuelle</MudText>
 
-<MudText Typo="Typo.h6" Class="mb-4 mt-8" Style="font-weight: 700; color: #0f172a; letter-spacing: -0.5px;">Répartition Visuelle</MudText>
-
     <MudGrid Spacing="4" Class="mb-8">
         <MudItem xs="12" md="6">
             <MudPaper Elevation="0" Class="pa-6 vox-card d-flex flex-column h-100">
                 <MudText Typo="Typo.subtitle1" Class="mb-6" Style="font-weight: 700; color: #1e293b;">Orientation Politique</MudText>
                 <div class="d-flex justify-center flex-grow-1 align-center w-100" style="min-height: 300px;">
-                    <!-- On a remis T="double" ici -->
                     <MudChart T="double" ChartType="ChartType.Pie" InputData="@DonneesOrientation" InputLabels="@LabelsOrientation" Options="@OptionsOrientation" Width="100%" Height="300px" />
                 </div>
             </MudPaper>
@@ -172,7 +170,6 @@
             <MudPaper Elevation="0" Class="pa-6 vox-card d-flex flex-column h-100">
                 <MudText Typo="Typo.subtitle1" Class="mb-6" Style="font-weight: 700; color: #1e293b;">État Émotionnel</MudText>
                 <div class="d-flex justify-center flex-grow-1 align-center w-100" style="min-height: 300px;">
-                    <!-- Et on a remis T="double" ici aussi -->
                     <MudChart T="double" ChartType="ChartType.Pie" InputData="@DonneesEmotion" InputLabels="@LabelsEmotion" Options="@OptionsEmotion" Width="100%" Height="300px" />
                 </div>
             </MudPaper>
@@ -187,9 +184,9 @@
                 <div class="vox-icon-container mb-4" Style="background-color: #d1fae5; width: 72px; height: 72px; border-radius: 50%;">
                     <MudIcon Icon="@Icons.Material.Filled.SentimentSatisfiedAlt" Style="color: #10b981;" Size="Size.Large" />
                 </div>
-                <MudText Typo="Typo.h3" Class="mb-1" Style="font-weight: 800; color: #0f172a;">@DonneesEmotion[0]%</MudText>
+                <MudText Typo="Typo.h3" Class="mb-1" Style="font-weight: 800; color: #0f172a;">@PctContents%</MudText>
                 <MudText Typo="Typo.body2" Style="color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Contents</MudText>
-                <MudProgressLinear Color="Color.Primary" Value="@DonneesEmotion[0]" Class="mt-6 w-100" Height="12px" Style="background-color: #f1f5f9; border-radius: 6px;" />
+                <MudProgressLinear Color="Color.Primary" Value="@PctContents" Class="mt-6 w-100" Height="12px" Style="background-color: #f1f5f9; border-radius: 6px;" />
             </MudPaper>
         </MudItem>
 
@@ -198,9 +195,9 @@
                 <div class="vox-icon-container mb-4" Style="background-color: #f1f5f9; width: 72px; height: 72px; border-radius: 50%;">
                     <MudIcon Icon="@Icons.Material.Filled.SentimentNeutral" Style="color: #64748b;" Size="Size.Large" />
                 </div>
-                <MudText Typo="Typo.h3" Class="mb-1" Style="font-weight: 800; color: #0f172a;">@DonneesEmotion[1]%</MudText>
+                <MudText Typo="Typo.h3" Class="mb-1" Style="font-weight: 800; color: #0f172a;">@PctNeutres%</MudText>
                 <MudText Typo="Typo.body2" Style="color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Neutres</MudText>
-                <MudProgressLinear Value="@DonneesEmotion[1]" Class="mt-6 w-100" Height="12px" Style="background-color: #f8fafc; border-radius: 6px; --mud-palette-primary: #64748b;" />
+                <MudProgressLinear Value="@PctNeutres" Class="mt-6 w-100" Height="12px" Style="background-color: #f8fafc; border-radius: 6px; --mud-palette-primary: #64748b;" />
             </MudPaper>
         </MudItem>
 
@@ -209,9 +206,9 @@
                 <div class="vox-icon-container mb-4" Style="background-color: #ffedd5; width: 72px; height: 72px; border-radius: 50%;">
                     <MudIcon Icon="@Icons.Material.Filled.SentimentDissatisfied" Style="color: #f97316;" Size="Size.Large" />
                 </div>
-                <MudText Typo="Typo.h3" Class="mb-1" Style="font-weight: 800; color: #0f172a;">@DonneesEmotion[2]%</MudText>
+                <MudText Typo="Typo.h3" Class="mb-1" Style="font-weight: 800; color: #0f172a;">@PctMecontents%</MudText>
                 <MudText Typo="Typo.body2" Style="color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Mécontents</MudText>
-                <MudProgressLinear Value="@DonneesEmotion[2]" Class="mt-6 w-100" Height="12px" Style="background-color: #fff7ed; border-radius: 6px; --mud-palette-primary: #f97316;" />
+                <MudProgressLinear Value="@PctMecontents" Class="mt-6 w-100" Height="12px" Style="background-color: #fff7ed; border-radius: 6px; --mud-palette-primary: #f97316;" />
             </MudPaper>
         </MudItem>
     </MudGrid>
@@ -223,7 +220,6 @@
     </MudPaper>
 
     <MudGrid Spacing="4" Class="mb-8">
-        <!-- COLONNE DE DROITE -->
         <MudItem xs="12" md="6">
             <MudText Typo="Typo.subtitle1" Class="mb-4 ml-2" Style="font-weight: 700; color: #1e293b;">Détail : Droite</MudText>
             
@@ -273,7 +269,6 @@
             </MudPaper>
         </MudItem>
 
-        <!-- COLONNE DE GAUCHE -->
         <MudItem xs="12" md="6">
             <MudText Typo="Typo.subtitle1" Class="mb-4 ml-2" Style="font-weight: 700; color: #1e293b;">Détail : Gauche</MudText>
             
@@ -345,6 +340,88 @@
         </div>
         <MudProgressLinear Value="@PourcentageGaucheContents" Class="rounded-pill" Height="14px" Style="background-color: #fef2f2; --mud-palette-primary: #ef4444;" />
     </MudPaper>
+
+    <MudText Typo="Typo.h6" Class="mb-4 mt-8" Style="font-weight: 700; color: #0f172a; letter-spacing: -0.5px;">Registre des Agents</MudText>
+
+    <MudPaper Elevation="0" Class="pa-6 mb-12 vox-card">
+        <MudTable Items="@SimulationActuelle.Agents" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0" Style="box-shadow: none; background-color: transparent;">
+            
+            <HeaderContent>
+                <MudTh Style="font-weight: 700; color: #64748b; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px;">ID</MudTh>
+                <MudTh Style="font-weight: 700; color: #64748b; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px;">Identité</MudTh>
+                <MudTh Style="font-weight: 700; color: #64748b; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px;">Orientation</MudTh>
+                <MudTh Style="font-weight: 700; color: #64748b; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px;">Émotion (Brute)</MudTh>
+            </HeaderContent>
+            
+            <RowTemplate>
+                <MudTd DataLabel="ID">
+                    <MudText Typo="Typo.body2" Style="font-weight: 700; color: #1e293b;">#@context.AgentId</MudText>
+                </MudTd>
+                
+                <MudTd DataLabel="Identité">
+                    <div class="d-flex align-center">
+                        <MudAvatar Size="Size.Small" Class="mr-3" Style="background-color: #f1f5f9; color: #64748b; font-size: 0.75rem; font-weight: 800;">
+                            @GetInitiale(context)
+                        </MudAvatar>
+                        <div>
+                            @{
+                                // On vérifie s'il y a un nom, sinon on donne un nom par défaut
+                                string nomComplet = $"{context.PrenomAgent} {context.NomAgent}".Trim();
+                                if (string.IsNullOrWhiteSpace(nomComplet))
+                                {
+                                    nomComplet = $"Agent #{context.AgentId}";
+                                }
+                            }
+                            <MudText Typo="Typo.body2" Style="font-weight: 700; color: #0f172a;">@nomComplet</MudText>
+                            @if(context.DateCreation.HasValue)
+                            {
+                                <MudText Typo="Typo.caption" Style="color: #94a3b8;">Créé le @context.DateCreation.Value.ToString("dd/MM/yyyy HH:mm")</MudText>
+                            }
+                        </div>
+                    </div>
+                </MudTd>
+                
+                <MudTd DataLabel="Orientation">
+                    @if(context.OrientationPolitique == "Droite" || context.OriantationPolitique == "Droite") 
+                    {
+                        <MudChip T="string" Size="Size.Small" Style="background-color: #eff6ff; color: #3b82f6; font-weight: 600;">Droite</MudChip>
+                    } 
+                    else if(context.OrientationPolitique == "Gauche" || context.OriantationPolitique == "Gauche") 
+                    {
+                        <MudChip T="string" Size="Size.Small" Style="background-color: #fef2f2; color: #ef4444; font-weight: 600;">Gauche</MudChip>
+                    } 
+                    else 
+                    {
+                        <MudChip T="string" Size="Size.Small" Style="background-color: #f1f5f9; color: #64748b; font-weight: 600;">@(context.OrientationPolitique ?? context.OriantationPolitique ?? "Centre")</MudChip>
+                    }
+                </MudTd>
+                
+                <MudTd DataLabel="Émotion">
+                    @if(context.NiveauEmotion == 2)
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Style="color: #10b981; border-color: #10b981; font-weight: 700; background-color: #f0fdf4;">Content</MudChip>
+                    }
+                    else if(context.NiveauEmotion == 1)
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Style="color: #64748b; border-color: #94a3b8; font-weight: 700; background-color: #f8fafc;">Neutre</MudChip>
+                    }
+                    else if(context.NiveauEmotion == 0)
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Style="color: #f97316; border-color: #f97316; font-weight: 700; background-color: #fff7ed;">Mécontent</MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default" Style="font-weight: 700;">Niveau @context.NiveauEmotion</MudChip>
+                    }
+                </MudTd>
+            </RowTemplate>
+            
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[]{10, 25, 50, 100}" RowsPerPageString="Agents par page :" InfoFormat="{first_item}-{last_item} sur {all_items}" />
+            </PagerContent>
+            
+        </MudTable>
+    </MudPaper>
 }
 
 @code {
@@ -384,6 +461,12 @@
     
     private double TauxSatisfactionGlobal => TotalAgents == 0 ? 0 : Math.Round(((double)(AgentsDroiteContents + AgentsGaucheContents) / TotalAgents) * 100, 1);
 
+    // --- VARIABLES SÉCURISÉES POUR LES CARTES ---
+    private double PctContents = 33.3;
+    private double PctNeutres = 33.3;
+    private double PctMecontents = 33.3;
+
+    // --- VARIABLES POUR LES CAMEMBERTS ---
     private double[] DonneesOrientation = { 50, 50 };
     private double[] DonneesEmotion = { 33.3, 33.3, 33.3 };
     private string[] LabelsOrientation = { "", "" };
@@ -418,74 +501,101 @@
         SimulationsDisponibles = await SimulationService.GetSimulationsAsync();
     }
 
-    private void OnSimulationChanged(string simulationIdStr)
+    private async Task OnSimulationChanged(string simulationIdStr)
     {
-        SimulationSelectionnee = simulationIdStr;
-
-        if (int.TryParse(simulationIdStr, out int id))
+        try
         {
-            SimulationActuelle = SimulationsDisponibles.FirstOrDefault(s => s.SimulationId == id);
+            SimulationSelectionnee = simulationIdStr;
 
-            if (SimulationActuelle != null)
+            if (int.TryParse(simulationIdStr, out int id))
             {
-                Orateur = "Non spécifié par l'API";
-                DateDiscours = SimulationActuelle.DateSimulation.ToString("dd MMMM yyyy");
-                SujetPrincipal = SimulationActuelle.Titre ?? "Sans titre";
-                Discours = SimulationActuelle.Discours ?? "Aucun texte disponible pour cette simulation.";
-                TotalAgents = SimulationActuelle.NbAgent > 0 ? SimulationActuelle.NbAgent : SimulationActuelle.Agents.Count;
+                SimulationActuelle = await SimulationService.GetSimulationByIdAsync(id);
 
-                var agentsDroiteList = SimulationActuelle.Agents.Where(a => a.OrientationPolitique == "Droite" || a.OriantationPolitique == "Droite").ToList();
-                var agentsGaucheList = SimulationActuelle.Agents.Where(a => a.OrientationPolitique == "Gauche" || a.OriantationPolitique == "Gauche").ToList();
-
-                AgentsDroite = agentsDroiteList.Count;
-                AgentsGauche = agentsGaucheList.Count;
-
-                AgentsDroiteContents = agentsDroiteList.Count(a => a.NiveauEmotion == 2);
-                AgentsDroiteNeutres = agentsDroiteList.Count(a => a.NiveauEmotion == 1);
-                AgentsDroiteMecontents = agentsDroiteList.Count(a => a.NiveauEmotion == 0);
-
-                AgentsGaucheContents = agentsGaucheList.Count(a => a.NiveauEmotion == 2);
-                AgentsGaucheNeutres = agentsGaucheList.Count(a => a.NiveauEmotion == 1);
-                AgentsGaucheMecontents = agentsGaucheList.Count(a => a.NiveauEmotion == 0);
-
-                // --- 1. CORRECTION ICI : Remplacement du 0.0001 qui fait planter le SVG MudBlazor ---
-                if (AgentsDroite == 0 && AgentsGauche == 0)
+                if (SimulationActuelle != null)
                 {
-                    DonneesOrientation = new double[] { 50, 50 }; // Affichera un cercle parfait
-                    LabelsOrientation = new string[] { "Aucun agent", "Aucun agent" };
-                }
-                else
-                {
-                    DonneesOrientation = new double[] { AgentsDroite, AgentsGauche }; // Nombres entiers propres
-                    LabelsOrientation = new string[] { $"Droite ({PourcentageDroite})", $"Gauche ({PourcentageGauche})" };
-                }
+                    // --- SÉCURITÉ ANTI-CRASH SUR LA LISTE DES AGENTS ---
+                    if (SimulationActuelle.Agents == null)
+                    {
+                        SimulationActuelle.Agents = new List<Agent>();
+                    }
 
-                int totalContents = SimulationActuelle.Agents.Count(a => a.NiveauEmotion == 2);
-                int totalNeutres = SimulationActuelle.Agents.Count(a => a.NiveauEmotion == 1);
-                int totalMecontents = SimulationActuelle.Agents.Count(a => a.NiveauEmotion == 0);
+                    Orateur = "Non spécifié par l'API";
+                    DateDiscours = SimulationActuelle.DateSimulation.ToString("dd MMMM yyyy");
+                    SujetPrincipal = SimulationActuelle.Titre ?? "Sans titre";
+                    Discours = SimulationActuelle.Discours ?? "Aucun texte disponible pour cette simulation.";
+                    TotalAgents = SimulationActuelle.NbAgent > 0 ? SimulationActuelle.NbAgent : SimulationActuelle.Agents.Count;
 
-                double pctContents = TotalAgents == 0 ? 0 : Math.Round(((double)totalContents / TotalAgents) * 100, 1);
-                double pctNeutres = TotalAgents == 0 ? 0 : Math.Round(((double)totalNeutres / TotalAgents) * 100, 1);
-                double pctMecontents = TotalAgents == 0 ? 0 : Math.Round(((double)totalMecontents / TotalAgents) * 100, 1);
+                    var agentsDroiteList = SimulationActuelle.Agents.Where(a => a.OrientationPolitique == "Droite" || a.OriantationPolitique == "Droite").ToList();
+                    var agentsGaucheList = SimulationActuelle.Agents.Where(a => a.OrientationPolitique == "Gauche" || a.OriantationPolitique == "Gauche").ToList();
 
-                // --- 2. CORRECTION ICI : Remplacement du 0.0001 qui fait planter le SVG MudBlazor ---
-                if (totalContents == 0 && totalNeutres == 0 && totalMecontents == 0)
-                {
-                    DonneesEmotion = new double[] { 33.3, 33.3, 33.3 }; // Affichera un camembert symétrique
-                    LabelsEmotion = new string[] { "Aucun", "Aucun", "Aucun" };
+                    AgentsDroite = agentsDroiteList.Count;
+                    AgentsGauche = agentsGaucheList.Count;
+
+                    AgentsDroiteContents = agentsDroiteList.Count(a => a.NiveauEmotion == 2);
+                    AgentsDroiteNeutres = agentsDroiteList.Count(a => a.NiveauEmotion == 1);
+                    AgentsDroiteMecontents = agentsDroiteList.Count(a => a.NiveauEmotion == 0);
+
+                    AgentsGaucheContents = agentsGaucheList.Count(a => a.NiveauEmotion == 2);
+                    AgentsGaucheNeutres = agentsGaucheList.Count(a => a.NiveauEmotion == 1);
+                    AgentsGaucheMecontents = agentsGaucheList.Count(a => a.NiveauEmotion == 0);
+
+                    // 1. Graphique d'Orientation
+                    var valOr = new List<double>();
+                    var labOr = new List<string>();
+                    var colOr = new List<string>();
+
+                    if (AgentsDroite > 0) { valOr.Add(AgentsDroite); labOr.Add($"Droite ({PourcentageDroite})"); colOr.Add("#3b82f6"); }
+                    if (AgentsGauche > 0) { valOr.Add(AgentsGauche); labOr.Add($"Gauche ({PourcentageGauche})"); colOr.Add("#ef4444"); }
+
+                    if (valOr.Count == 0) { valOr.Add(1); labOr.Add("Aucune donnée"); colOr.Add("#e2e8f0"); }
+
+                    DonneesOrientation = valOr.ToArray();
+                    LabelsOrientation = labOr.ToArray();
+                    OptionsOrientation = new ChartOptions { ChartPalette = colOr.ToArray() };
+
+                    // 2. Gestion des valeurs statiques (Sécurité)
+                    int totalContents = SimulationActuelle.Agents.Count(a => a.NiveauEmotion == 2);
+                    int totalNeutres = SimulationActuelle.Agents.Count(a => a.NiveauEmotion == 1);
+                    int totalMecontents = SimulationActuelle.Agents.Count(a => a.NiveauEmotion == 0);
+
+                    PctContents = TotalAgents == 0 ? 0 : Math.Round(((double)totalContents / TotalAgents) * 100, 1);
+                    PctNeutres = TotalAgents == 0 ? 0 : Math.Round(((double)totalNeutres / TotalAgents) * 100, 1);
+                    PctMecontents = TotalAgents == 0 ? 0 : Math.Round(((double)totalMecontents / TotalAgents) * 100, 1);
+
+                    // 3. Graphique d'Émotions (Dynamique)
+                    var valEm = new List<double>();
+                    var labEm = new List<string>();
+                    var colEm = new List<string>();
+
+                    if (PctContents > 0) { valEm.Add(PctContents); labEm.Add($"Contents ({PctContents}%)"); colEm.Add("#10b981"); }
+                    if (PctNeutres > 0) { valEm.Add(PctNeutres); labEm.Add($"Neutres ({PctNeutres}%)"); colEm.Add("#94a3b8"); }
+                    if (PctMecontents > 0) { valEm.Add(PctMecontents); labEm.Add($"Mécontents ({PctMecontents}%)"); colEm.Add("#f97316"); }
+
+                    if (valEm.Count == 0) { valEm.Add(1); labEm.Add("Aucune donnée"); colEm.Add("#e2e8f0"); }
+
+                    DonneesEmotion = valEm.ToArray();
+                    LabelsEmotion = labEm.ToArray();
+                    OptionsEmotion = new ChartOptions { ChartPalette = colEm.ToArray() };
+                    
+                    StateHasChanged(); 
                 }
-                else 
-                {
-                    DonneesEmotion = new double[] { pctContents, pctNeutres, pctMecontents }; // Pourcentages propres
-                    LabelsEmotion = new string[] { $"Contents ({pctContents}%)", $"Neutres ({pctNeutres}%)", $"Mécontents ({pctMecontents}%)" };
-                }
-                
-                StateHasChanged(); 
+            }
+            else
+            {
+                SimulationActuelle = null;
             }
         }
-        else
+        catch (Exception ex)
         {
-            SimulationActuelle = null;
+            Snackbar.Add($"Erreur d'affichage : {ex.Message}", Severity.Error);
         }
+    }
+
+    private string GetInitiale(Agent agent)
+    {
+        if (agent == null) return "A";
+        string nomComplet = $"{agent.PrenomAgent} {agent.NomAgent}".Trim();
+        if (string.IsNullOrWhiteSpace(nomComplet)) return "A"; 
+        return nomComplet.Substring(0, 1).ToUpper();
     }
 }

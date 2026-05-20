@@ -1,4 +1,6 @@
-﻿namespace vox_populi_dashboard.Models
+﻿using System.Text.Json.Serialization;
+
+namespace vox_populi_dashboard.Models
 {
     public class Simulation
     {
@@ -13,12 +15,15 @@
     public class Agent
     {
         public int AgentId { get; set; }
+        [JsonPropertyName("nom")] // API renvoie "nom"
         public string? NomAgent { get; set; }
 
-        // On déclare les deux orthographes au cas où l'API ait gardé la faute de frappe du SQL
+        [JsonPropertyName("prenom")] // API renvoie "prenom"
+        public string? PrenomAgent { get; set; }
+        public DateTime? DateCreation { get; set; }
+
         public string? OriantationPolitique { get; set; }
         public string? OrientationPolitique { get; set; }
-
         public int NiveauEmotion { get; set; }
         public List<Prediction> Predictions { get; set; } = new();
     }
