@@ -517,6 +517,13 @@
 
                 if (SimulationActuelle != null)
                 {
+
+                    // On utilise des valeurs par défaut ou des propriétés qui existent déjà comme 'Titre'
+                    Orateur = "Orateur à définir"; 
+                    DateDiscours = "Date non spécifiée"; 
+                    SujetPrincipal = SimulationActuelle.Titre ?? "Sujet non spécifié";
+                    Discours = SimulationActuelle.Discours ?? "Aucun texte disponible pour cette simulation.";
+
                     if (SimulationActuelle.Agents == null) SimulationActuelle.Agents = new List<Agent>();
 
                     TotalAgents = SimulationActuelle.NbAgent > 0 ? SimulationActuelle.NbAgent : SimulationActuelle.Agents.Count;
